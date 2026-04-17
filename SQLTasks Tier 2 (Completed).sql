@@ -322,6 +322,20 @@ QUESTIONS:
 The output of facility name and total revenue, sorted by revenue. Remember
 that there's a different cost for guests and members! */
 
+SELECT f.name,
+       SUM(
+           CASE
+               WHEN b.memid = 0 THEN f.guestcost * b.slots
+               ELSE f.membercost * b.slots
+           END
+       ) AS revenue
+FROM Facilities f
+JOIN Bookings b
+  ON f.facid = b.facid
+GROUP BY f.name
+HAVING revenue < 1000;
+
+
 facility	total_revenue
 0	Table Tennis	180.0
 1	Snooker Table	240.0
@@ -330,6 +344,16 @@ facility	total_revenue
 
 
 /* Q11: Produce a report of members and who recommended them in alphabetic surname,firstname order */
+
+SELECT 
+    m.firstname || ' ' || m.surname AS member,
+    r.firstname || ' ' || r.surname AS recommended_by
+FROM Members m
+LEFT JOIN Members r
+    ON m.recommendedby = r.memid
+ORDER BY m.surname, m.firstname;
+
+
 	member	recommended_by
 0	Florence Bader	Ponder Stibbons
 1	Anne Baker	Ponder Stibbons
@@ -365,6 +389,19 @@ facility	total_revenue
 
 
 /* Q12: Find the facilities with their usage by member, but not guests */
+
+SELECT 
+    f.name AS facility,
+    COUNT(*) AS member_usage
+FROM Bookings b
+JOIN Facilities f
+    ON b.facid = f.facid
+WHERE b.memid <> 0
+GROUP BY f.name
+ORDER BY f.name;
+
+
+
 facility	member_usage
 0	Badminton Court	344
 1	Massage Room 1	421
@@ -380,6 +417,19 @@ facility	member_usage
 
 /* Q13: Find the facilities usage by month, but not guests */
 facility	month	member_usage
+
+SELECT 
+    f.name AS facility,
+    strftime('%m', b.starttime) AS month,
+    COUNT(*) AS member_usage
+FROM Bookings b
+JOIN Facilities f
+    ON b.facid = f.facid
+WHERE b.memid <> 0
+GROUP BY f.name, month
+ORDER BY month, f.name;
+
+
 0	Badminton Court	07	51
 1	Massage Room 1	07	77
 2	Massage Room 2	07	4
